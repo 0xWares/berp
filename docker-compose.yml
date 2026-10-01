@@ -1,0 +1,54 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: berp-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - berp-redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - berp
+
+  # ---------------------------------------------------------------
+  # Optional: uncomment if you ever want Postgres in Docker instead
+  # of the native install. Remember to stop the system Postgres first.
+  # ---------------------------------------------------------------
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: berp-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: berp
+  #     POSTGRES_PASSWORD: berp
+  #     POSTGRES_DB: berp_dev
+  #   ports:
+  #     - "127.0.0.1:5433:5432"   # use 5433 to avoid conflict with native PG
+  #   volumes:
+  #     - berp-postgres-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U berp -d berp_dev"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - berp
+
+volumes:
+  berp-redis-data:
+  # berp-postgres-data:
+
+networks:
+  berp:
+    driver: bridge
